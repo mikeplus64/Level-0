@@ -18,14 +18,18 @@ darkColour   = Pixel 0x222422
 
 blockSize :: Int
 blockSize = 16
+
+blocksWH  = windowWidth `div` blockSize
+
 bs  = blockSize
 bs2 = blockSize `div` 2
 bs4 = blockSize `div` 4
 
-startWorld :: Int -> Int -> Int -> Int -> [Int] -> [Int] -> World
-startWorld sX sY iX iY scores' fscores' = 
+startWorld :: Int -> Int -> Int -> Int -> [Int] -> [Int] -> Stage -> World
+startWorld sX sY iX iY scores' fscores' stage' = 
     World {
           snake   = Snake E [(sX * bs, sY * bs)]
+        , stage   = stage'
         , paused  = False
         , score   = 0
         , scores  = scores'

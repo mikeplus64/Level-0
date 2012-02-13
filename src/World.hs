@@ -6,6 +6,18 @@ import Utils
 import Game
 import Types
 import Data.List (nub)
+import System.Random (randomRIO)
+
+-- get random (Int, Int)
+
+randomXY :: World -> IO (Int, Int)
+randomXY world = do
+    r0 <- randomRIO (1, 31)
+    r1 <- randomRIO (1, 31)
+    -- this is an ugly hack
+    case any (== (r0, r1)) (stage world) of
+        True  -> randomXY world
+        False -> return (r0, r1)
 
 -- if the item is eaten, return (True, the item's coordinates)
 -- else, return (False, the item's coordinates)
@@ -21,16 +33,16 @@ updateItem item' snake = case safeHead (points item') of
 -- if the direction is anything else, and we aren't adding to the snake, then move the snake and check for collisions
 -- otherwise try and move it and insert x new blocks in the snake.
 
-updateSnake :: Direction -> Snake -> Int -> Bool -> Snake
-updateSnake D s@(Snake _ ps) _ b = if b then s else Snake D ps
-updateSnake d s@(Snake _ ps) 0 b = if b then s else collision $ Snake d $ moveD d (head ps) : init ps
-updateSnake d s@(Snake _ ps) x b = if b then s else collision $ Snake d $ moveD d (head ps) : replicate x (head ps) ++ init ps
+updateSnake :: Stage -> Direction -> Snake -> Int -> Bool -> Snake
+updateSnake stage D s@(Snake _ ps) _ b = if b then s else Snake D ps
+updateSnake stage d s@(Snake _ ps) 0 b = if b then s else collision stage $ Snake d $ moveD d (head ps) : init ps
+updateSnake stage d s@(Snake _ ps) x b = if b then s else collision stage $ Snake d $ moveD d (head ps) : replicate x (head ps) ++ init ps
 
 -- check for collisions, if there is one, empty the snake
-collision :: Snake -> Snake
-collision s@(Snake d ps) = case d of
+collision :: Stage -> Snake -> Snake
+collision stage s@(Snake d ps) = case d of
     D -> s
-    _ -> if any (== head ps) (tail ps)
+    _ -> if any (== head ps) (tail ps ++ stage)
             then Snake D []
             else s
 

@@ -2,6 +2,8 @@ module Types where
 
 type Point = (Int, Int)
 
+type Stage = [Point]
+
 data Item = Bonus [Point]
 
 -- North, South, East, West or Dennis
@@ -11,6 +13,7 @@ data Snake = Snake Direction [Point]
 
 data World = World {
           snake     :: Snake
+        , stage     :: Stage
         , paused    :: Bool
         , score     :: Int
         , scores    :: [Int]

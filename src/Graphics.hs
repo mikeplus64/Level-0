@@ -52,17 +52,25 @@ drawWorld surface font world = do
     forM_ [0, bs .. windowWidth] $ \y ->
         fillRect surface (Just (Rect 0 y windowWidth 1)) lightColour
 
+    -- draw snake shadows
+    forM_ (points (snake world)) $ \(x, y) -> 
+        fillRect surface (Just (Rect (x + 2) (y + 2) bs bs)) shadowColour
+    
+    -- draw stage shadow
+    forM_ (stage world) $ \(x, y) ->
+        fillRect surface (Just (Rect (x + 2) (y + 2) bs bs)) shadowColour
+    
     -- draw items
     forM_ (points (item world)) $ \(x, y) -> do
         fillRect surface (Just (Rect (x + bs4 + 2) (y + bs4 + 2) bs2 bs2)) shadowColour
         fillRect surface (Just (Rect (x + bs4)     (y + bs4)     bs2 bs2)) darkColour
-
-    -- for each (x, y) in the snake, draw a box, blockSize wide, whose centre is (x, y)
-    -- ran twice for dark + shadow
-    forM_ (points (snake world)) $ \(x, y) -> 
-        fillRect surface (Just (Rect (x + 2) (y + 2) bs bs)) shadowColour
     
+    -- draw snake
     forM_ (points (snake world)) $ \(x, y) -> 
+        fillRect surface (Just (Rect x y bs bs)) darkColour
+    
+    -- draw stage
+    forM_ (stage world) $ \(x, y) -> 
         fillRect surface (Just (Rect x y bs bs)) darkColour
 
     -- draw the score

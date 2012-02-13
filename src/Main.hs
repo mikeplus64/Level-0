@@ -6,15 +6,19 @@ import Game
 import Graphics
 import Types
 import Utils
+import Stage
 
 import Graphics.UI.SDL     as SDL
 import Graphics.UI.SDL.TTF as TTF
 import Control.Monad (forM_)
 import System.Random (randomRIO)
 import System.Directory (getAppUserDataDirectory, createDirectoryIfMissing)
+import System.Environment (getArgs)
 import System.Exit
 
 main = do
+    args <- getArgs
+    
     -- make sure the conf directory exists...
     dataDir <- getAppUserDataDirectory "config/level_0"
     createDirectoryIfMissing True dataDir
@@ -29,23 +33,22 @@ main = do
     setVideoMode windowWidth windowWidth 24 [HWSurface, DoubleBuf]
     surface <- getVideoSurface
 
-    -- starting snake X and Y
-    sX <- randomRIO (0, 31)
-    sY <- randomRIO (0, 31)
-    
     -- starting item X and Y
-    iX <- randomRIO (0, 31)
-    iY <- randomRIO (0, 31)
+    stage' <- fileToStage $ case args of
+        [path] -> path
+        _      -> dataDir ++ "/map"
+
+    (iX, iY) <- randomXY (startWorld 16 16 0 0 [] [] stage')
 
     -- display intro
-    drawWorld surface font (startWorld sX sY iX iY [] [])
+    drawWorld surface font (startWorld 16 16 iX iY [] [] stage')
     drawText  surface font "Press space to begin." 0 (-60)
     SDL.flip surface
 
-    playGame <- (doUntil waitEventBlocking $ \event -> case event of
+    playGame <- doUntil waitEventBlocking $ \event -> case event of
         KeyDown (Keysym SDLK_SPACE _ _) -> A
         Quit                            -> B
-        _                               -> C)
+        _                               -> C
     
     if not playGame
         then do
@@ -56,7 +59,7 @@ main = do
 
             let oldScores = map (\x -> read x :: Int) oldScores'
 
-            game <- gameLoop surface font (startWorld sX sY iX iY [] oldScores)
+            game <- gameLoop surface font (startWorld 16 16 iX iY [] oldScores stage') stage'
             
             SDL.quit
             
