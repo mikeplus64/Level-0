@@ -8,16 +8,18 @@ import Types
 import Data.List (nub)
 import System.Random (randomRIO)
 
+import Debug.Trace
+
 -- get random (Int, Int)
 
 randomXY :: World -> IO (Int, Int)
 randomXY world = do
     r0 <- randomRIO (1, 31)
     r1 <- randomRIO (1, 31)
-    -- this is an ugly hack
-    case any (== (r0, r1)) (stage world) of
-        True  -> randomXY world
-        False -> return (r0, r1)
+    
+    if any (== (r0, r1)) (stage world)
+        then trace "randomXY: collision:" (randomXY world)
+        else return (r0, r1)
 
 -- if the item is eaten, return (True, the item's coordinates)
 -- else, return (False, the item's coordinates)
@@ -34,6 +36,7 @@ updateItem item' snake = case safeHead (points item') of
 -- otherwise try and move it and insert x new blocks in the snake.
 
 updateSnake :: Stage -> Direction -> Snake -> Int -> Bool -> Snake
+updateSnake _     _ d@(Dead  _ _ ) _ _ = d
 updateSnake stage D s@(Snake _ ps) _ b = if b then s else Snake D ps
 updateSnake stage d s@(Snake _ ps) 0 b = if b then s else collision stage $ Snake d $ moveD d (head ps) : init ps
 updateSnake stage d s@(Snake _ ps) x b = if b then s else collision stage $ Snake d $ moveD d (head ps) : replicate x (head ps) ++ init ps
@@ -43,7 +46,7 @@ collision :: Stage -> Snake -> Snake
 collision stage s@(Snake d ps) = case d of
     D -> s
     _ -> if any (== head ps) (tail ps ++ stage)
-            then Snake D []
+            then Dead d ps
             else s
 
 moveD :: Direction -> Point -> Point
@@ -82,7 +85,6 @@ dir oldDir newDir = case oldDir of
         _ -> newDir
 
 dead :: World -> Bool
-dead world = case points (snake world) of
-    [] -> True
-    _  -> False
-
+dead world = case snake world of
+    Dead  _ _  -> True
+    _          -> False

@@ -9,7 +9,7 @@ data Item = Bonus [Point]
 -- North, South, East, West or Dennis
 data Direction = N | S | E | W | D
 
-data Snake = Snake Direction [Point]
+data Snake = Snake Direction [Point] | Dead Direction [Point]
 
 data World = World {
           snake     :: Snake
@@ -26,6 +26,7 @@ class Points a where
     points :: a -> [Point]
 
 instance Points Snake where
+    points (Dead  _ ps) = ps
     points (Snake _ ps) = ps
 
 instance Points Item where

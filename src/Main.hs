@@ -59,7 +59,7 @@ main = do
 
             let oldScores = map (\x -> read x :: Int) oldScores'
 
-            game <- gameLoop surface font (startWorld 16 16 iX iY [] oldScores stage') stage'
+            game <- gameLoop surface font (startWorld 16 16 iX iY [] oldScores stage')
             
             SDL.quit
             

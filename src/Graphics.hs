@@ -60,6 +60,10 @@ drawWorld surface font world = do
     forM_ (stage world) $ \(x, y) ->
         fillRect surface (Just (Rect (x + 2) (y + 2) bs bs)) shadowColour
     
+    -- draw stage
+    forM_ (stage world) $ \(x, y) -> 
+        fillRect surface (Just (Rect x y bs bs)) darkColour
+
     -- draw items
     forM_ (points (item world)) $ \(x, y) -> do
         fillRect surface (Just (Rect (x + bs4 + 2) (y + bs4 + 2) bs2 bs2)) shadowColour
@@ -69,10 +73,6 @@ drawWorld surface font world = do
     forM_ (points (snake world)) $ \(x, y) -> 
         fillRect surface (Just (Rect x y bs bs)) darkColour
     
-    -- draw stage
-    forM_ (stage world) $ \(x, y) -> 
-        fillRect surface (Just (Rect x y bs bs)) darkColour
-
     -- draw the score
     drawText surface font (show (score world)) (12 - h2) (36 - w2)
 

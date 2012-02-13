@@ -10,8 +10,8 @@ import Control.Monad (unless)
 import Graphics.UI.SDL     as SDL
 import Graphics.UI.SDL.TTF as TTF
 
-gameLoop :: Surface -> Font -> World -> Stage -> IO World
-gameLoop surface font world stage' = do
+gameLoop :: Surface -> Font -> World -> IO World
+gameLoop surface font world = do
     event    <- pollEvent
     (r0, r1) <- randomXY world
     case eventHandler (r0, r1) event world of
@@ -43,14 +43,14 @@ gameLoop surface font world stage' = do
                         then return scoredWorld
                         else do                   
                             drawWorld surface font scoredWorld
-                            gameLoop  surface font (startWorld 16 16 iX iY (scores scoredWorld) (fscores scoredWorld) stage') stage'
+                            gameLoop  surface font (startWorld 16 16 iX iY (scores scoredWorld) (fscores scoredWorld) (stage world))
 
                 -- 
                 else do 
                     SDL.flip surface
                     delay 16
                     drawWorld surface font newWorld
-                    gameLoop  surface font newWorld stage'
+                    gameLoop  surface font newWorld
 
     
 eventHandler :: (Int, Int) -> Event -> World -> Either World World
