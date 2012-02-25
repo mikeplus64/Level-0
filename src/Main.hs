@@ -15,7 +15,8 @@ import System.Random (randomRIO)
 import System.Directory (getAppUserDataDirectory, createDirectoryIfMissing)
 import System.Environment (getArgs)
 import System.Exit
-
+import Data.Word (Word32)
+ 
 main = do
     args <- getArgs
     
@@ -34,14 +35,17 @@ main = do
     surface <- getVideoSurface
 
     -- starting item X and Y
-    stage' <- fileToStage $ case args of
-        [path] -> path
-        _      -> dataDir ++ "/map"
-
-    (iX, iY) <- randomXY (startWorld 16 16 0 0 [] [] stage')
+    (speed, stage'') <- case args of
+        [speed, path] -> return (read speed :: Word32, fileToStage path)
+        [speed]       -> return (read speed :: Word32, fileToStage (dataDir ++ "/map"))
+        _             -> return (16, fileToStage (dataDir ++ "/map"))
+    
+    stage' <- stage''
+    
+    start <- randomXY (startWorld (P 16 16) (P 0 0) [] [] stage')
 
     -- display intro
-    drawWorld surface font (startWorld 16 16 iX iY [] [] stage')
+    drawWorld surface font (startWorld (P 16 16) start [] [] stage')
     drawText  surface font "Press space to begin." 0 (-60)
     SDL.flip surface
 
@@ -59,7 +63,7 @@ main = do
 
             let oldScores = map (\x -> read x :: Int) oldScores'
 
-            game <- gameLoop surface font (startWorld 16 16 iX iY [] oldScores stage')
+            game <- gameLoop surface font (startWorld (P 16 16) start [] oldScores stage') speed
             
             SDL.quit
             

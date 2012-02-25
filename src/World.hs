@@ -1,76 +1,68 @@
 module World where
+{-# LANGUAGE BangPatterns #-}
 
 import Graphics.UI.SDL.Color
-import Control.Arrow ((***))
+import Data.List
 import Utils
 import Game
 import Types
-import Data.List (nub)
+
 import System.Random (randomRIO)
 
-import Debug.Trace
-
--- get random (Int, Int)
-
-randomXY :: World -> IO (Int, Int)
+-- get random (Int, Int), making sure it isn't a point in the map.
+randomXY :: World -> IO Point
 randomXY world = do
-    r0 <- randomRIO (1, 31)
-    r1 <- randomRIO (1, 31)
+    x <- randomRIO (1, 31)
+    y <- randomRIO (1, 31)
+    if P x y `elem` stage world
+        then randomXY world
+        else return (P x y)
     
-    if any (== (r0, r1)) (stage world)
-        then trace "randomXY: collision:" (randomXY world)
-        else return (r0, r1)
-
 -- if the item is eaten, return (True, the item's coordinates)
 -- else, return (False, the item's coordinates)
 
-updateItem :: Item -> Snake -> (Bool, Item)
-updateItem item' snake = case safeHead (points item') of
-    Just i  -> if any (== i) (points snake)
-        then (True,  item')
-        else (False, item')
-    Nothing -> (False, item')
+updateItem :: Item -> Snake -> Bool
+updateItem item' snake = case (points item') of
+    [i] -> any (== i) (points snake)
+    []  -> False
 
 -- if the old and new direction is D, then don't do anything
 -- if the direction is anything else, and we aren't adding to the snake, then move the snake and check for collisions
 -- otherwise try and move it and insert x new blocks in the snake.
 
 updateSnake :: Stage -> Direction -> Snake -> Int -> Bool -> Snake
+-- if the snake is paused, don't update it
+updateSnake _     _ s           _ True = s
+
+-- if the snake is dead, don't update it
 updateSnake _     _ d@(Dead  _ _ ) _ _ = d
-updateSnake stage D s@(Snake _ ps) _ b = if b then s else Snake D ps
-updateSnake stage d s@(Snake _ ps) 0 b = if b then s else collision stage $ Snake d $ moveD d (head ps) : init ps
-updateSnake stage d s@(Snake _ ps) x b = if b then s else collision stage $ Snake d $ moveD d (head ps) : replicate x (head ps) ++ init ps
+
+-- check for collisions in the new snake
+updateSnake stage d s@(Snake _ ps) 0 b = collision stage $ Snake d $ moveD d (head ps) : init ps
+updateSnake stage d s@(Snake _ ps) x b = collision stage $ Snake d $ moveD d (head ps) : replicate x (head ps) ++ init ps
 
 -- check for collisions, if there is one, empty the snake
 collision :: Stage -> Snake -> Snake
-collision stage s@(Snake d ps) = case d of
-    D -> s
-    _ -> if any (== head ps) (tail ps ++ stage)
-            then Dead d ps
-            else s
+collision stage s@(Snake d ps) = 
+    if any (== head ps) (tail ps ++ stage)
+        then Dead d ps
+        else s
 
 moveD :: Direction -> Point -> Point
-moveD direction (x, y) = wrap rawCoordinate
+moveD direction (P x y) = wrap $ case direction of
+        N -> moveP (P 0 (-1))
+        S -> moveP (P 0    1)
+        E -> moveP (P 1    0)
+        W -> moveP (P (-1) 0)
   where
     -- raw coordinate without trying to loop around the edge of the screen
-    wrap :: Point -> Point
-    wrap (x, y) = (mod x windowWidth, mod y windowHeight)
-
-    rawCoordinate :: Point
-    rawCoordinate = case direction of
-        N -> moveP (0, (-bs))
-        S -> moveP (0,    bs)
-        E -> moveP (bs,    0)
-        W -> moveP ((-bs), 0)
-        D -> (x, y)
+    wrap (P x y) = P (mod x blocksWH) (mod y blocksWH)
     
-    moveP :: Point -> Point
-    moveP (x0, y0) = (x0 + x, y0 + y)
+    moveP (P x0 y0) = P (x0 + x) (y0 + y)
 
 -- make sure the snake isn't trying to turn into itself
 dir :: Direction -> Direction -> Direction
 dir oldDir newDir = case oldDir of
-    D -> newDir
     N -> case newDir of
         S -> N
         _ -> newDir

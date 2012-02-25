@@ -1,13 +1,18 @@
 module Types where
+{-# LANGUAGE BangPatterns #-}
 
-type Point = (Int, Int)
+data Point = P !Int !Int deriving Eq
 
 type Stage = [Point]
 
 data Item = Bonus [Point]
 
--- North, South, East, West or Dennis
-data Direction = N | S | E | W | D
+-- North, South, East, West
+data Direction = N | S | E | W
+
+{-# INLINE direction #-}
+direction :: Snake -> Direction
+direction (Snake d _) = d
 
 data Snake = Snake Direction [Point] | Dead Direction [Point]
 
@@ -19,7 +24,7 @@ data World = World {
         , scores    :: [Int]
         , fscores   :: [Int]
         , item      :: Item
-    }
+    } | End World
 
 
 class Points a where

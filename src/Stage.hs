@@ -13,5 +13,5 @@ fileToStage path = do
 
     -- convert to stage
     return $ concat $ map catMaybes $ mapXY (\d (x, y) -> case d of
-        'x' -> Just (bs * x, bs * y)
+        'x' -> Just (P x y)
         _   -> Nothing) file

@@ -25,16 +25,14 @@ bs  = blockSize
 bs2 = blockSize `div` 2
 bs4 = blockSize `div` 4
 
-startWorld :: Int -> Int -> Int -> Int -> [Int] -> [Int] -> Stage -> World
-startWorld sX sY iX iY scores' fscores' stage' = 
+startWorld :: Point -> Point -> [Int] -> [Int] -> Stage -> World
+startWorld (P sX sY) (P iX iY) scores' fscores' stage' = 
     World {
-          snake   = Snake E [(sX * bs, sY * bs)]
+          snake   = Snake E [P sX sY]
         , stage   = stage'
         , paused  = False
         , score   = 0
         , scores  = scores'
         , fscores = fscores'
-        , item    = Bonus [(iX * bs, iY * bs)]
+        , item    = Bonus [P iX iY]
     }
-
-

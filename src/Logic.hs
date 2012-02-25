@@ -9,15 +9,24 @@ import Types
 import Control.Monad (unless)
 import Graphics.UI.SDL     as SDL
 import Graphics.UI.SDL.TTF as TTF
+import Data.Word (Word32)
 
-gameLoop :: Surface -> Font -> World -> IO World
-gameLoop surface font world = do
-    event    <- pollEvent
-    (r0, r1) <- randomXY world
-    case eventHandler (r0, r1) event world of
-
+gameLoop :: Surface -> Font -> World -> Word32 -> IO World
+gameLoop surface font world speed = do
+    event  <- pollEvent
+    setCaption ("Level 0 (" ++ show (score world) ++ ")") ""
+    case eventHandler event world of
         -- the game died; return it
-        Left deadWorld -> return deadWorld
+        Left (End deadWorld) -> return deadWorld
+
+        -- need to get more random numbers dude!
+        Left newWorld -> do
+            start <- fmap (\(P x y) -> (P x y)) (randomXY newWorld)
+            SDL.flip surface
+            delay speed
+            drawWorld surface font (newWorld { item = Bonus [start] })
+            gameLoop  surface font (newWorld { item = Bonus [start] }) speed
+            
 
         Right newWorld -> do
             if dead newWorld -- if the snake died...
@@ -26,7 +35,7 @@ gameLoop surface font world = do
                     let scoredWorld = newWorld { scores = (score newWorld):(scores newWorld) }
                     
                     -- starting item X and Y
-                    (iX, iY) <- randomXY world
+                    start <- randomXY newWorld
 
                     drawScores surface font scoredWorld
 
@@ -43,44 +52,43 @@ gameLoop surface font world = do
                         then return scoredWorld
                         else do                   
                             drawWorld surface font scoredWorld
-                            gameLoop  surface font (startWorld 16 16 iX iY (scores scoredWorld) (fscores scoredWorld) (stage world))
+                            gameLoop  surface font (startWorld (P 16 16) start (scores scoredWorld) (fscores scoredWorld) (stage world)) speed
 
-                -- 
-                else do 
+                --
+                else do
                     SDL.flip surface
-                    delay 16
+                    delay speed
                     drawWorld surface font newWorld
-                    gameLoop  surface font newWorld
+                    gameLoop  surface font newWorld speed
 
     
-eventHandler :: (Int, Int) -> Event -> World -> Either World World
-eventHandler (r0, r1) event world = case event of
+eventHandler :: Event -> World -> Either World World
+eventHandler event world = case event of
 
     KeyDown (Keysym key _ _) -> Right $ case key of
-        SDLK_DOWN  -> world { snake  = updateSnake stg (dir d S) s 0 p }
-        SDLK_UP    -> world { snake  = updateSnake stg (dir d N) s 0 p }
-        SDLK_LEFT  -> world { snake  = updateSnake stg (dir d W) s 0 p }
-        SDLK_RIGHT -> world { snake  = updateSnake stg (dir d E) s 0 p }
-        SDLK_p     -> world { paused = not p                       }
-        _          -> world { snake  = updateSnake stg  d        s 0 p }
+        SDLK_DOWN  -> world { snake  = updateSnake stg (dir d S) s 0 pause }
+        SDLK_UP    -> world { snake  = updateSnake stg (dir d N) s 0 pause }
+        SDLK_LEFT  -> world { snake  = updateSnake stg (dir d W) s 0 pause }
+        SDLK_RIGHT -> world { snake  = updateSnake stg (dir d E) s 0 pause }
+        SDLK_p     -> world { paused = not pause                           }
+        _          -> world { snake  = updateSnake stg  d        s 0 pause }
 
     -- if they quit, return the world in order to clean up and write the scores to a file
-    Quit -> Left  world
-    _    -> Right $ if p then world else world
-                { snake = updateSnake stg d s (fromEnum itemGet) False
-                -- if the item is eaten, make a new one.
-                , item = if itemGet 
-                            then Bonus [(r0 * bs, r1 * bs)] 
-                            else itemGot 
-                -- if an item was eaten, add 1 to the score
-                , score = fromEnum itemGet + (score world)
-                }
+
+    Quit -> Left (End world)
+    _    -> if pause
+        then Right world
+        else (if gotItem then Left else Right) world
+            { snake = updateSnake (stage world) (direction s) s (fromEnum gotItem) False
+            , item  = if gotItem then Bonus [] else (item world) -- so we don't impurify our precious event handler!
+            , score = fromEnum gotItem + (score world)
+            }
   where
     -- handy abbreviations
-    s   = snake world
-    d   = (\(Snake dir _) -> dir) s 
-    p   = paused world
-    stg = stage world
+    d     = direction (snake world)
+    s     = snake world
+    stg   = stage world
+    pause = paused world
 
-    (itemGet, itemGot) = updateItem (item world) s
+    gotItem = updateItem (item world) s
 
