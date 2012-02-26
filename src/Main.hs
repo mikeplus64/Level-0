@@ -1,3 +1,6 @@
+-- Copyright 2012 Mike Ledger
+-- License: GNU GPL v3. See COPYING.
+
 module Main where
 
 import Logic
@@ -11,12 +14,12 @@ import Stage
 import Graphics.UI.SDL     as SDL
 import Graphics.UI.SDL.TTF as TTF
 import Control.Monad (forM_)
-import System.Random (randomRIO)
 import System.Directory (getAppUserDataDirectory, createDirectoryIfMissing)
 import System.Environment (getArgs)
 import System.Exit
 import Data.Word (Word32)
- 
+
+main :: IO ()
 main = do
     args <- getArgs
     
