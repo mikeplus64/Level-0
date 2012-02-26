@@ -4,7 +4,6 @@ import Data.Maybe (catMaybes)
 
 import Types
 import Utils
-import Game
 
 fileToStage :: FilePath -> IO Stage
 fileToStage path = do

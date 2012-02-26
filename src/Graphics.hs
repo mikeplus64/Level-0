@@ -2,8 +2,7 @@ module Graphics where
 
 import Graphics.UI.SDL as SDL
 import Graphics.UI.SDL.TTF as TTF
-import Data.Word (Word32)
-import Control.Monad (forM_, when)
+import Control.Monad (forM_)
 import Data.List (sort)
 import Types
 import Game

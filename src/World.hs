@@ -1,11 +1,8 @@
 module World where
 {-# LANGUAGE BangPatterns #-}
 
-import Graphics.UI.SDL.Color
-import Data.List
-import Utils
-import Game
 import Types
+import Game
 
 import System.Random (randomRIO)
 
@@ -22,9 +19,9 @@ randomXY world = do
 -- else, return (False, the item's coordinates)
 
 updateItem :: Item -> Snake -> Bool
-updateItem item' snake = case (points item') of
-    [i] -> any (== i) (points snake)
-    []  -> False
+updateItem item' snake' = case (points item') of
+    [i] -> any (== i) (points snake')
+    _   -> False
 
 -- if the old and new direction is D, then don't do anything
 -- if the direction is anything else, and we aren't adding to the snake, then move the snake and check for collisions
@@ -38,25 +35,27 @@ updateSnake _     _ s           _ True = s
 updateSnake _     _ d@(Dead  _ _ ) _ _ = d
 
 -- check for collisions in the new snake
-updateSnake stage d s@(Snake _ ps) 0 b = collision stage $ Snake d $ moveD d (head ps) : init ps
-updateSnake stage d s@(Snake _ ps) x b = collision stage $ Snake d $ moveD d (head ps) : replicate x (head ps) ++ init ps
+updateSnake stage' d (Snake _ ps) 0 _ = collision stage' $ Snake d $ moveD d (head ps) : init ps
+updateSnake stage' d (Snake _ ps) x _ = collision stage' $ Snake d $ moveD d (head ps) : replicate x (head ps) ++ init ps
 
 -- check for collisions, if there is one, empty the snake
 collision :: Stage -> Snake -> Snake
-collision stage s@(Snake d ps) = 
-    if any (== head ps) (tail ps ++ stage)
+collision stage' s@(Snake d ps) = 
+    if any (== head ps) (tail ps ++ stage')
         then Dead d ps
         else s
 
+collision _ d@(Dead _ _) = d
+
 moveD :: Direction -> Point -> Point
-moveD direction (P x y) = wrap $ case direction of
+moveD dir' (P x y) = wrap $ case dir' of
         N -> moveP (P 0 (-1))
         S -> moveP (P 0    1)
         E -> moveP (P 1    0)
         W -> moveP (P (-1) 0)
   where
     -- raw coordinate without trying to loop around the edge of the screen
-    wrap (P x y) = P (mod x blocksWH) (mod y blocksWH)
+    wrap (P x0 y0) = P (mod x0 blocksWH) (mod y0 blocksWH)
     
     moveP (P x0 y0) = P (x0 + x) (y0 + y)
 
