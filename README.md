@@ -12,10 +12,13 @@
 * a font (by default tries to get /usr/share/fonts/TTF/TerminusBold.ttf)
 
 ## Installation / usage
-$ make
-$ bin/level_0 [ms between frames [path to map file]]
+`$ make`
+
+`$ bin/level_0 [ms between frames [path to map file]]`
+
 eg
-$ bin/level_0 16 map
+
+`$ bin/level_0 16 map`
 
 I don't know if it's buildable on Windows.
 
