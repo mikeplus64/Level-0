@@ -8,7 +8,8 @@
 
 ## Prerequisites
 * GHC (tested with 7.0.3 and 7.4.1)
-* SDL libraries
+* SDL from Hackage
+* SDL-ttf from Hackage
 * a font (by default tries to get /usr/share/fonts/TTF/TerminusBold.ttf)
 
 ## Installation / usage
