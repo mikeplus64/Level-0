@@ -12,6 +12,7 @@ data Direction = N | S | E | W
 
 {-# INLINE direction #-}
 direction :: Snake -> Direction
+direction (Dead  d _) = d
 direction (Snake d _) = d
 
 data Snake = Snake Direction [Point] | Dead Direction [Point]

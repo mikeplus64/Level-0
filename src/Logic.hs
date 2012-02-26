@@ -6,7 +6,6 @@ import Game
 import Graphics
 import Types
 
-import Control.Monad (unless)
 import Graphics.UI.SDL     as SDL
 import Graphics.UI.SDL.TTF as TTF
 import Data.Word (Word32)
@@ -42,7 +41,7 @@ gameLoop surface font world speed = do
                     SDL.flip surface
 
                     -- wait until space is pressed
-                    waitForPress <- doUntil waitEventBlocking $ \event -> case event of
+                    waitForPress <- doUntil waitEventBlocking $ \ev -> case ev of
                         KeyDown (Keysym SDLK_SPACE _ _) -> A
                         Quit                            -> B
                         _                               -> C
