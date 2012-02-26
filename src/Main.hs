@@ -16,7 +16,6 @@ import Graphics.UI.SDL.TTF as TTF
 import Control.Monad (forM_)
 import System.Directory (getAppUserDataDirectory, createDirectoryIfMissing)
 import System.Environment (getArgs)
-import System.Exit
 import Data.Word (Word32)
 
 main :: IO ()
@@ -74,9 +73,6 @@ main = do
             forM_ (map ((++ "\n") . show) (scores game)) $ \score' ->
                 appendFile (dataDir ++ "/score") score'
 
-            -- finish up
-            exitWith ExitSuccess
         else do
             -- this wasn't a very meaningful existence at all
             SDL.quit
-            exitWith ExitSuccess
