@@ -1,4 +1,5 @@
 module Types where
+import Data.Word (Word32)
 {-# LANGUAGE BangPatterns #-}
 
 data Point = P !Int !Int deriving Eq
@@ -21,6 +22,7 @@ data World = World
     { snake     :: Snake
     , stage     :: Stage
     , paused    :: Bool
+    , speed     :: Word32
     , score     :: Int
     , scores    :: [Int]
     , fscores   :: [Int]

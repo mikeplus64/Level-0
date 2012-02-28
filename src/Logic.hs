@@ -9,10 +9,9 @@ import Types
 import Graphics.UI.SDL     as SDL
 import Graphics.UI.SDL.TTF as TTF
 import Graphics.UI.SDL.Extra.Keys
-import Data.Word (Word32)
 
-gameLoop :: Surface -> Font -> World -> Word32 -> IO World
-gameLoop surface font world speed = do
+gameLoop :: Surface -> Font -> World -> IO World
+gameLoop surface font world = do
     event  <- pollEvent
     setCaption ("Level 0 (" ++ show (score world) ++ ")") ""
     
@@ -28,9 +27,9 @@ gameLoop surface font world speed = do
         Left newWorld -> do
             start <- fmap (\(P x y) -> (P x y)) (randomXY newWorld)
             SDL.flip surface
-            delay speed
+            delay (speed world)
             drawWorld surface font (newWorld { item = Bonus [start] })
-            gameLoop  surface font (newWorld { item = Bonus [start] }) speed
+            gameLoop  surface font (newWorld { item = Bonus [start] })
             
 
         Right newWorld ->
@@ -57,26 +56,27 @@ gameLoop surface font world speed = do
                         then return scoredWorld
                         else do                   
                             drawWorld surface font scoredWorld
-                            gameLoop  surface font (startWorld (P 16 16) start (scores scoredWorld) (fscores scoredWorld) (stage world)) speed
+                            gameLoop  surface font (startWorld (P 16 16) start (scores scoredWorld) (fscores scoredWorld) (stage world) (speed world))
 
-                --
                 else do
                     SDL.flip surface
-                    delay speed
+                    delay (speed world)
                     drawWorld surface font newWorld
-                    gameLoop  surface font newWorld speed
+                    gameLoop  surface font newWorld
 
     
 eventHandler :: Event -> World -> Either World World
 eventHandler event world = case event of
 
     KeyDown (Keysym key _ _) -> Right $ case key of
-        SDLK_DOWN  -> world { snake  = updateSnake stg (dir d S) s 0 pause }
-        SDLK_UP    -> world { snake  = updateSnake stg (dir d N) s 0 pause }
-        SDLK_LEFT  -> world { snake  = updateSnake stg (dir d W) s 0 pause }
-        SDLK_RIGHT -> world { snake  = updateSnake stg (dir d E) s 0 pause }
-        SDLK_p     -> world { paused = not pause                           }
-        _          -> world { snake  = updateSnake stg  d        s 0 pause }
+        SDLK_DOWN   -> world { snake  = updateSnake stg (dir d S) s 0 pause              }
+        SDLK_UP     -> world { snake  = updateSnake stg (dir d N) s 0 pause              }
+        SDLK_LEFT   -> world { snake  = updateSnake stg (dir d W) s 0 pause              }
+        SDLK_RIGHT  -> world { snake  = updateSnake stg (dir d E) s 0 pause              }
+        SDLK_p      -> world { paused = not pause                                        }
+        SDLK_k      -> world { speed  = speed world + 1                                  }
+        SDLK_j      -> world { speed  = if speed world == 0 then 0 else speed world - 1  }
+        _           -> world { snake  = updateSnake stg  d        s 0 pause              }
 
     -- if they quit, return the world in order to clean up and write the scores to a file
 

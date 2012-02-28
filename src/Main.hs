@@ -24,12 +24,12 @@ main = do
     dataDir <- getAppUserDataDirectory "config/level_0"
     createDirectoryIfMissing True dataDir
 
-    (speed, stage'') <- case args of
-        ["none", speed] -> return (read speed, return [])
-        [path, speed]   -> return (read speed, fileToStage path)
-        [path]          -> return (16, fileToStage path)
-        []              -> return (16, return [])
-        _               -> error "usage: level_0 [stage file [speed]|stage file]. If you want to set a custom speed, you must also set the map file. For no map use 'none'"
+    (speed', stage'') <- case args of
+        ["none", speed'']   -> return (read speed'', return [])
+        [path, speed'']     -> return (read speed'', fileToStage path)
+        [path]              -> return (16, fileToStage path)
+        []                  -> return (16, return [])
+        _                   -> error "usage: level_0 [stage file [speed]|stage file]. If you want to set a custom speed, you must also set the map file. For no map use 'none'"
 
     stage' <- stage''
     
@@ -40,13 +40,13 @@ main = do
     font <- openFont (dataDir ++ "/font.ttf") 18
 
     setCaption "Level 0" ""
-    setVideoMode windowWidth windowWidth 24 [HWSurface, DoubleBuf]
+    setVideoMode windowWidth windowHeight 24 [HWSurface, DoubleBuf]
     surface <- getVideoSurface
 
-    start <- randomXY (startWorld (P 16 16) (P 0 0) [] [] stage')
+    start <- randomXY (startWorld (P 16 16) (P 0 0) [] [] stage' 0)
 
     -- display intro
-    drawWorld surface font (startWorld (P 16 16) start [] [] stage')
+    drawWorld surface font (startWorld (P 16 16) start [] [] stage' 0)
     drawText  surface font "Press space to begin." 0 (-60)
     SDL.flip surface
 
@@ -64,7 +64,7 @@ main = do
 
         let oldScores = map (\x -> read x :: Int) oldScores'
 
-        game <- gameLoop surface font (startWorld (P 16 16) start [] oldScores stage') speed
+        game <- gameLoop surface font (startWorld (P 16 16) start [] oldScores stage' speed')
 
         SDL.quit
 
