@@ -8,12 +8,18 @@ import Types
 
 import Graphics.UI.SDL     as SDL
 import Graphics.UI.SDL.TTF as TTF
+import Graphics.UI.SDL.Extra.Keys
 import Data.Word (Word32)
 
 gameLoop :: Surface -> Font -> World -> Word32 -> IO World
 gameLoop surface font world speed = do
     event  <- pollEvent
     setCaption ("Level 0 (" ++ show (score world) ++ ")") ""
+    
+    case event of
+        KeyDown (Keysym SDLK_RETURN _ _) -> getStringAndDo print >>= \l -> putStr (l ++ " returned")
+        _ -> return ()
+
     case eventHandler event world of
         -- the game died; return it
         Left (End deadWorld) -> return deadWorld
@@ -27,11 +33,11 @@ gameLoop surface font world speed = do
             gameLoop  surface font (newWorld { item = Bonus [start] }) speed
             
 
-        Right newWorld -> do
+        Right newWorld ->
             if dead newWorld -- if the snake died...
                 -- display scores, wait until space bar, then start a new game
                 then do
-                    let scoredWorld = newWorld { scores = (score newWorld):(scores newWorld) }
+                    let scoredWorld = newWorld { scores = score newWorld : scores newWorld }
                     
                     -- starting item X and Y
                     start <- randomXY newWorld
@@ -41,10 +47,10 @@ gameLoop surface font world speed = do
                     SDL.flip surface
 
                     -- wait until space is pressed
-                    waitForPress <- doUntil waitEventBlocking $ \ev -> case ev of
-                        KeyDown (Keysym SDLK_SPACE _ _) -> A
-                        Quit                            -> B
-                        _                               -> C
+                    waitForPress <- while3 waitEventBlocking $ \ev -> case ev of
+                        KeyDown (Keysym SDLK_SPACE _ _) -> A -- case A -> stop waiting; start game
+                        Quit                            -> B -- case B -> stop waiting; quit game
+                        _                               -> C -- else loop again
 
                     -- if the user wants to quit ...
                     if waitForPress
@@ -79,8 +85,8 @@ eventHandler event world = case event of
         then Right world
         else (if gotItem then Left else Right) world
             { snake = updateSnake (stage world) (direction s) s (fromEnum gotItem) False
-            , item  = if gotItem then Bonus [] else (item world) -- so we don't impurify our precious event handler!
-            , score = fromEnum gotItem + (score world)
+            , item  = if gotItem then Bonus [] else item world -- so we don't impurify our precious event handler!
+            , score = fromEnum gotItem + score world
             }
   where
     -- handy abbreviations

@@ -17,14 +17,14 @@ direction (Snake d _) = d
 
 data Snake = Snake Direction [Point] | Dead Direction [Point]
 
-data World = World {
-          snake     :: Snake
-        , stage     :: Stage
-        , paused    :: Bool
-        , score     :: Int
-        , scores    :: [Int]
-        , fscores   :: [Int]
-        , item      :: Item
+data World = World 
+    { snake     :: Snake
+    , stage     :: Stage
+    , paused    :: Bool
+    , score     :: Int
+    , scores    :: [Int]
+    , fscores   :: [Int]
+    , item      :: Item
     } | End World
 
 

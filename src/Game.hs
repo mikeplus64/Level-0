@@ -21,7 +21,7 @@ blockSize :: Int
 blockSize = 16
 
 blocksWH :: Int
-blocksWH  = windowWidth `div` blockSize
+blocksWH = windowWidth `div` blockSize
 
 bs, bs2, bs4 :: Int
 bs  = blockSize
@@ -30,12 +30,12 @@ bs4 = blockSize `div` 4
 
 startWorld :: Point -> Point -> [Int] -> [Int] -> Stage -> World
 startWorld (P sX sY) (P iX iY) scores' fscores' stage' = 
-    World {
-          snake   = Snake E [P sX sY]
-        , stage   = stage'
-        , paused  = False
-        , score   = 0
-        , scores  = scores'
-        , fscores = fscores'
-        , item    = Bonus [P iX iY]
+    World 
+    { snake   = Snake E [P sX sY]
+    , stage   = stage'
+    , paused  = False
+    , score   = 0
+    , scores  = scores'
+    , fscores = fscores'
+    , item    = Bonus [P iX iY]
     }

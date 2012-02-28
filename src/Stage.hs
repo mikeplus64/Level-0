@@ -4,6 +4,17 @@ import Data.Maybe (catMaybes)
 
 import Types
 import Utils
+import Game
+
+data FSBlock = Blank (Int, Int) | Wall (Int, Int)
+    deriving Show
+
+type FullStage = [[FSBlock]]
+
+fullBlankStage :: FullStage
+fullBlankStage = forXY uncoord (\v (x, y) -> v (x, y))
+    where
+        uncoord = replicate blocksWH $ replicate blocksWH $ Blank
 
 fileToStage :: FilePath -> IO Stage
 fileToStage path = do
@@ -11,6 +22,6 @@ fileToStage path = do
     file <- fmap lines (readFile path)
 
     -- convert to stage
-    return $ concat $ map catMaybes $ mapXY (\d (x, y) -> case d of
+    return $ concatMap catMaybes $ forXY file $ \d (x, y) -> case d of
         'x' -> Just (P x y)
-        _   -> Nothing) file
+        _   -> Nothing

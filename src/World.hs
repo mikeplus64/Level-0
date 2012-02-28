@@ -1,5 +1,4 @@
 module World where
-{-# LANGUAGE BangPatterns #-}
 
 import Types
 import Game
@@ -19,8 +18,8 @@ randomXY world = do
 -- else, return (False, the item's coordinates)
 
 updateItem :: Item -> Snake -> Bool
-updateItem item' snake' = case (points item') of
-    [i] -> any (== i) (points snake')
+updateItem item' snake' = case points item' of
+    [i] -> i `elem` points snake'
     _   -> False
 
 -- if the old and new direction is D, then don't do anything
@@ -41,7 +40,7 @@ updateSnake stage' d (Snake _ ps) x _ = collision stage' $ Snake d $ moveD d (he
 -- check for collisions, if there is one, empty the snake
 collision :: Stage -> Snake -> Snake
 collision stage' s@(Snake d ps) = 
-    if any (== head ps) (tail ps ++ stage')
+    if head ps `elem` tail ps ++ stage'
         then Dead d ps
         else s
 

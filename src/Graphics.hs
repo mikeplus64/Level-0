@@ -2,7 +2,7 @@ module Graphics where
 
 import Graphics.UI.SDL as SDL
 import Graphics.UI.SDL.TTF as TTF
-import Control.Monad (forM_)
+import Control.Monad (when, forM_)
 import Data.List (sort)
 import Types
 import Game
@@ -76,7 +76,5 @@ drawWorld surface font world = do
     drawText surface font (show (score world)) (12 - h2) (36 - w2)
 
     -- if the world is paused, draw the score board
-    if paused world
-        then drawScores surface font world
-        else return ()
+    when (paused world) $ drawScores surface font world
 
