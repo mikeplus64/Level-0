@@ -9,6 +9,7 @@ import Types
 import Graphics.UI.SDL     as SDL
 import Graphics.UI.SDL.TTF as TTF
 import Graphics.UI.SDL.Extra.Keys
+import Data.List (nub)
 
 gameLoop :: Surface -> Font -> World -> IO World
 gameLoop surface font world = do
@@ -64,6 +65,7 @@ gameLoop surface font world = do
     
 eventHandler :: Event -> World -> Either World World
 eventHandler event world = case event of
+    MouseMotion x y _ _ -> Right $ world { stage = nub $ P (fromIntegral (x `div` blocksWH)) (fromIntegral (y `div` blocksWH)) : stage world }
     
     KeyDown (Keysym SDLK_r _ _) -> Left $ world { item = Nothing, score = score world - 1 }
 
