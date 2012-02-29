@@ -20,19 +20,22 @@ gameLoop surface font world = do
     case eventHandler event world of
         -- if we want to save the map ...
         (World _ _ _ _ _ _ _ _ _ _ [SaveMap] _) -> do
-            path <- getStringAndDo $ \s -> do 
+            maybePath <- getStringAndDo $ \s -> do 
                 drawWorld surface font world
                 drawText  surface font "Filename: " (-h2 + 8) (-60)
                 unless (null s) $ void $ drawText surface font s (-h2 + 8) 30
                 SDL.flip surface
 
-            stageToFile (stage world) path
+            case maybePath of
+                Just path -> stageToFile (stage world) path
+                Nothing   -> putStrLn "error: no filename entered"
+
             gameLoop  surface font (world { pending = [] })
 
         -- if the help menu is open ...
         (World _ _ _ _ _ _ _ _ _ _ _ True) -> do
             fillRect  surface (Just (Rect 0 0 windowWidth yoffset)) background
-            drawText  surface font "m: editor; w: save map; j: lower speed; k: raise speed" (-h2 + 8) (-w2)
+            drawText  surface font "m: editor; w: save map; j/k: +/- speed" (-h2 + 6) (-w2 + 34)
             SDL.flip  surface
             
             quitOrContinue <- while3 (delay 16 >> waitEventBlocking) $ \event0 -> case event0 of
