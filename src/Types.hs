@@ -11,6 +11,8 @@ type Item = Maybe Point
 -- North, South, East, West
 data Direction = N | S | E | W
 
+data GameEvent = SaveMap
+
 data Snake = Snake
     { alive     :: Bool
     , direction :: Direction 
@@ -27,4 +29,7 @@ data World = World
     , scores    :: [Int]
     , fscores   :: [Int]
     , item      :: Item
+    , editmode  :: Bool
+    , pending   :: [GameEvent]
+    , help      :: Bool
     }

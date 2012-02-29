@@ -35,13 +35,16 @@ bs4 = blockSize `div` 4
 startWorld :: Point -> Point -> [Int] -> [Int] -> Stage -> Word32 -> World
 startWorld (P sX sY) (P iX iY) scores' fscores' stage' speed' = 
     World 
-    { snake   = Snake True E [P sX sY]
-    , stage   = stage'
-    , paused  = False
-    , score   = 0
-    , speed   = speed'
-    , scores  = scores'
-    , fscores = fscores'
-    , item    = Just (P iX iY)
-    , running = True
+    { snake    = Snake True E [P sX sY]
+    , stage    = stage'
+    , paused   = False
+    , score    = 0
+    , speed    = speed'
+    , scores   = scores'
+    , fscores  = fscores'
+    , item     = Just (P iX iY)
+    , running  = True
+    , editmode = False
+    , pending  = []
+    , help     = False
     }

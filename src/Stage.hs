@@ -6,15 +6,8 @@ import Types
 import Utils
 import Game
 
-data FSBlock = Blank (Int, Int) | Wall (Int, Int)
-    deriving Show
-
-type FullStage = [[FSBlock]]
-
-fullBlankStage :: FullStage
-fullBlankStage = forXY uncoord (\v (x, y) -> v (x, y))
-    where
-        uncoord = replicate blocksWH $ replicate blocksWH $ Blank
+fullBlankStage :: [String]
+fullBlankStage = replicate blocksWH $ replicate blocksWH ' '
 
 fileToStage :: FilePath -> IO Stage
 fileToStage path = do
@@ -25,3 +18,11 @@ fileToStage path = do
     return $ concatMap catMaybes $ forXY file $ \d (x, y) -> case d of
         'x' -> Just (P x y)
         _   -> Nothing
+
+stageToString :: Stage -> [String]
+stageToString stage' = forXY fullBlankStage (\_ (x, y) -> if P x y `elem` stage' then 'x' else ' ')
+
+stageToFile :: Stage -> FilePath -> IO ()
+stageToFile stage' path = 
+    let stageString = unlines $ stageToString stage'
+    in writeFile path stageString
