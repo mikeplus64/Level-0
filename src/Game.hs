@@ -35,12 +35,13 @@ bs4 = blockSize `div` 4
 startWorld :: Point -> Point -> [Int] -> [Int] -> Stage -> Word32 -> World
 startWorld (P sX sY) (P iX iY) scores' fscores' stage' speed' = 
     World 
-    { snake   = Snake E [P sX sY]
+    { snake   = Snake True E [P sX sY]
     , stage   = stage'
     , paused  = False
     , score   = 0
     , speed   = speed'
     , scores  = scores'
     , fscores = fscores'
-    , item    = Bonus [P iX iY]
+    , item    = Just (P iX iY)
+    , running = True
     }

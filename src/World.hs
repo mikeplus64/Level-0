@@ -18,9 +18,8 @@ randomXY world = do
 -- else, return (False, the item's coordinates)
 
 updateItem :: Item -> Snake -> Bool
-updateItem item' snake' = case points item' of
-    [i] -> i `elem` points snake'
-    _   -> False
+updateItem Nothing  _       = False
+updateItem (Just p) snake'  = p `elem` points snake'
 
 -- if the old and new direction is D, then don't do anything
 -- if the direction is anything else, and we aren't adding to the snake, then move the snake and check for collisions
@@ -31,20 +30,18 @@ updateSnake :: Stage -> Direction -> Snake -> Int -> Bool -> Snake
 updateSnake _     _ s           _ True = s
 
 -- if the snake is dead, don't update it
-updateSnake _     _ d@(Dead  _ _ ) _ _ = d
+updateSnake _     _ d@(Snake False  _ _ ) _ _ = d
 
 -- check for collisions in the new snake
-updateSnake stage' d (Snake _ ps) 0 _ = collision stage' $ Snake d $ moveD d (head ps) : init ps
-updateSnake stage' d (Snake _ ps) x _ = collision stage' $ Snake d $ moveD d (head ps) : replicate x (head ps) ++ init ps
+updateSnake stage' d (Snake True _ ps) 0 _ = collision stage' $ Snake True d $ moveD d (head ps) : init ps
+updateSnake stage' d (Snake True _ ps) x _ = collision stage' $ Snake True d $ moveD d (head ps) : replicate x (head ps) ++ init ps
 
 -- check for collisions, if there is one, empty the snake
 collision :: Stage -> Snake -> Snake
-collision stage' s@(Snake d ps) = 
+collision stage' s@(Snake _ _ ps) = 
     if head ps `elem` tail ps ++ stage'
-        then Dead d ps
+        then s { alive = False }
         else s
-
-collision _ d@(Dead _ _) = d
 
 moveD :: Direction -> Point -> Point
 moveD dir' (P x y) = wrap $ case dir' of
@@ -73,8 +70,3 @@ dir oldDir newDir = case oldDir of
     W -> case newDir of
         E -> W
         _ -> newDir
-
-dead :: World -> Bool
-dead world = case snake world of
-    Dead  _ _  -> True
-    _          -> False

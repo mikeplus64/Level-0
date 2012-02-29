@@ -12,7 +12,7 @@ import Graphics.UI.SDL.Extra.Keys
 
 gameLoop :: Surface -> Font -> World -> IO World
 gameLoop surface font world = do
-    event  <- pollEvent
+    event <- pollEvent
     setCaption ("Level 0 (" ++ show (score world) ++ ")") ""
     
     case event of
@@ -20,22 +20,26 @@ gameLoop surface font world = do
         _ -> return ()
 
     case eventHandler event world of
-        -- the game died; return it
-        Left (End deadWorld) -> return deadWorld
+
+        Left e@(World False _ _ _ _ _ _ _ _) -> return e
 
         -- need to get more random numbers dude!
         Left newWorld -> do
             start <- fmap (\(P x y) -> (P x y)) (randomXY newWorld)
             SDL.flip surface
             delay (speed world)
-            drawWorld surface font (newWorld { item = Bonus [start] })
-            gameLoop  surface font (newWorld { item = Bonus [start] })
-            
+            drawWorld surface font (newWorld { item = Just start })
+            gameLoop  surface font (newWorld { item = Just start })
 
         Right newWorld ->
-            if dead newWorld -- if the snake died...
-                -- display scores, wait until space bar, then start a new game
+            if alive (snake newWorld) -- if the snake died...
                 then do
+                    SDL.flip surface
+                    delay (speed world)
+                    drawWorld surface font newWorld
+                    gameLoop  surface font newWorld
+                -- display scores, wait until space bar, then start a new game
+                else do
                     let scoredWorld = newWorld { scores = score newWorld : scores newWorld }
                     
                     -- starting item X and Y
@@ -57,16 +61,11 @@ gameLoop surface font world = do
                         else do                   
                             drawWorld surface font scoredWorld
                             gameLoop  surface font (startWorld (P 16 16) start (scores scoredWorld) (fscores scoredWorld) (stage world) (speed world))
-
-                else do
-                    SDL.flip surface
-                    delay (speed world)
-                    drawWorld surface font newWorld
-                    gameLoop  surface font newWorld
-
     
 eventHandler :: Event -> World -> Either World World
 eventHandler event world = case event of
+    
+    KeyDown (Keysym SDLK_r _ _) -> Left $ world { item = Nothing, score = score world - 1 }
 
     KeyDown (Keysym key _ _) -> Right $ case key of
         SDLK_DOWN   -> world { snake  = updateSnake stg (dir d S) s 0 pause              }
@@ -80,12 +79,12 @@ eventHandler event world = case event of
 
     -- if they quit, return the world in order to clean up and write the scores to a file
 
-    Quit -> Left (End world)
+    Quit -> Left $ world { running = False }
     _    -> if pause
         then Right world
         else (if gotItem then Left else Right) world
-            { snake = updateSnake (stage world) (direction s) s (fromEnum gotItem) False
-            , item  = if gotItem then Bonus [] else item world -- so we don't impurify our precious event handler!
+            { snake = updateSnake stg d s (fromEnum gotItem) False
+            , item  = if gotItem then Nothing else item world -- so we don't impurify our precious event handler!
             , score = fromEnum gotItem + score world
             }
   where

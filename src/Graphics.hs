@@ -64,19 +64,21 @@ drawWorld surface font world = do
         fillRect surface (Just (Rect (x * bs ) (y * bs + yoffset) bs bs)) darkColour
     
     -- draw items
-    forM_ (points (item world)) $ \(P x y) -> do
-        fillRect surface (Just (Rect (x * bs + bs4 + 2) (y * bs + bs4 + 2 + yoffset) bs2 bs2)) shadowColour
-        fillRect surface (Just (Rect (x * bs + bs4)     (y * bs + bs4 + yoffset)     bs2 bs2)) darkColour
+    case item world of
+        Just (P x y)  -> do
+            fillRect surface (Just (Rect (x * bs + bs4 + 2) (y * bs + bs4 + 2 + yoffset) bs2 bs2)) shadowColour
+            fillRect surface (Just (Rect (x * bs + bs4)     (y * bs + bs4 + yoffset)     bs2 bs2)) darkColour
+        Nothing -> return False
     
     -- draw snake
     forM_ (points (snake world)) $ \(P x y) -> 
         fillRect surface (Just (Rect (x * bs) (y * bs + yoffset) bs bs)) darkColour
     
     -- draw the score
-    drawText surface font (show (score world)) (8 - h2) (32 - w2)
+    drawText surface font ("Score: " ++ show (score world)) (8 - h2) (32 - w2)
     
     -- draw speed setting
-    drawText surface font (show (speed world) ++ "ms") (8 - h2) (80 - w2)
+    drawText surface font (show (speed world) ++ "ms") (8 - h2) (180 - w2)
     
     -- draw top edge shadow
     fillRect surface (Just (Rect 0 (yoffset + 1) windowWidth 2)) shadowColour
