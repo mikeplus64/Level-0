@@ -77,7 +77,7 @@ drawWorld surface font world = do
     drawText surface font ("Score: " ++ show (score world)) (8 - h2) (32 - w2)
     
     -- draw speed setting
-    drawText surface font (show (speed world) ++ "ms") (8 - h2) (-130)
+    drawText surface font (show (speed world)) (8 - h2) w2
     
     -- draw top edge shadow
     fillRect surface (Just (Rect 0 (yoffset + 1) windowWidth 2)) shadowColour

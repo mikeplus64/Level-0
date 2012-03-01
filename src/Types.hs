@@ -11,7 +11,7 @@ type Item = Maybe Point
 -- North, South, East, West
 data Direction = N | S | E | W
 
-data GameEvent = SaveMap
+data GameEvent = SaveMap | GetMap
 
 data Snake = Snake
     { alive     :: Bool

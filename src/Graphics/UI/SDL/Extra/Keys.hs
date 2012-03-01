@@ -1,5 +1,6 @@
 module Graphics.UI.SDL.Extra.Keys where
 import Graphics.UI.SDL hiding (init)
+import Data.Char (isAlphaNum, isSpace)
 
 keyToChar :: SDLKey -> Maybe Char
 keyToChar SDLK_a = Just 'a'
@@ -38,6 +39,10 @@ keyToChar _ = Nothing
 getStringAndDo :: (String -> IO ()) -> IO (Maybe String)
 getStringAndDo f = loop ""
   where
+    good :: String -> Maybe String
+    good "" = Nothing
+    good s  = if all (\i -> isAlphaNum i || isSpace i) s then Just s else Nothing
+
     loop :: String -> IO (Maybe String)
     loop [] = f [] >> pollEvent >>= \event -> 
         case event of
@@ -47,7 +52,7 @@ getStringAndDo f = loop ""
 
     loop line = f line >> pollEvent >>= \event ->
         case event of
-            KeyDown (Keysym SDLK_RETURN _ _)    -> return (Just line)
+            KeyDown (Keysym SDLK_RETURN _ _)    -> return (good line)
             KeyDown (Keysym SDLK_BACKSPACE _ _) -> loop $ init line
             KeyDown (Keysym key _ _)            -> loop $ maybe line ((line ++) . (:[])) (keyToChar key)
             _                                   -> loop line

@@ -12,7 +12,18 @@ import Graphics.UI.SDL.TTF as TTF
 import Graphics.UI.SDL.Extra.Keys
 
 import Data.List (nub, delete)
+import Data.Maybe (fromMaybe)
 import Control.Monad (unless, void)
+import Data.Foldable (for_)
+import Data.Traversable (forM)
+
+getFileName :: Surface -> Font -> World -> IO (Maybe String)
+getFileName surface font world = getStringAndDo $ \s -> do 
+    drawWorld surface font world
+    drawText  surface font "Filename: " (-h2 + 8) (-110)
+    unless (null s) $ void $ drawText surface font s (-h2 + 8) 30
+    SDL.flip surface
+
 
 gameLoop :: Surface -> Font -> World -> IO World
 gameLoop surface font world = do
@@ -20,22 +31,23 @@ gameLoop surface font world = do
     case eventHandler event world of
         -- if we want to save the map ...
         (World _ _ _ _ _ _ _ _ _ _ [SaveMap] _) -> do
-            maybePath <- getStringAndDo $ \s -> do 
-                drawWorld surface font world
-                drawText  surface font "Filename: " (-h2 + 8) (-60)
-                unless (null s) $ void $ drawText surface font s (-h2 + 8) 30
-                SDL.flip surface
-
-            case maybePath of
-                Just path -> stageToFile (stage world) path
-                Nothing   -> putStrLn "error: no filename entered"
-
+            maybePath <- getFileName surface font world
+            for_ maybePath $ stageToFile (stage world)
             gameLoop  surface font (world { pending = [] })
+
+        -- if we want to load a map ...
+        (World _ _ _ _ _ _ _ _ _ _ [GetMap] _) -> do
+            maybePath <- getFileName surface font world
+            newStage  <- fmap (fromMaybe (stage world)) (forM maybePath fileToStage)
+            gameLoop  surface font (world { pending = [], stage = newStage } )
 
         -- if the help menu is open ...
         (World _ _ _ _ _ _ _ _ _ _ _ True) -> do
-            fillRect  surface (Just (Rect 0 0 windowWidth yoffset)) background
-            drawText  surface font "m: editor; w: save map; j/k: +/- speed" (-h2 + 6) (-w2 + 34)
+            fillRect  surface (Just (Rect 0 0 windowWidth (yoffset + 15))) shadowColour
+            fillRect  surface (Just (Rect 0 0 windowWidth (yoffset + 13))) darkColour
+            fillRect  surface (Just (Rect 0 0 windowWidth (yoffset + 12))) background
+            drawText  surface font "m: editor; w: save map; c: clear; j/k: +/- speed" (-h2 + 3) (-w2 + 34)
+            drawText  surface font "l: load map; h: toggle this help" (-h2 + 19) (-w2 + 34)
             SDL.flip  surface
             
             quitOrContinue <- while3 (delay 16 >> waitEventBlocking) $ \event0 -> case event0 of
@@ -79,13 +91,13 @@ gameLoop surface font world = do
                     SDL.flip surface
 
                     -- wait until space is pressed
-                    waitForPress <- while3 waitEventBlocking $ \ev -> case ev of
+                    quitWhileWaitingForPress <- while3 waitEventBlocking $ \ev -> case ev of
                         KeyDown (Keysym SDLK_SPACE _ _) -> A -- case A -> stop waiting; start game
                         Quit                            -> B -- case B -> stop waiting; quit game
                         _                               -> C -- else loop again
 
                     -- if the user wants to quit ...
-                    if waitForPress
+                    if quitWhileWaitingForPress
                         then return scoredWorld
                         else do                   
                             drawWorld surface font scoredWorld
@@ -101,8 +113,10 @@ eventHandler event world = if editmode world
         MouseButtonDown x y ButtonRight -> world { stage = delete (P (fromIntegral (x `div` 16)) (fromIntegral ((y - 24) `div` 16))) (stage world) }
 
         KeyDown (Keysym key _ _) -> case key of
+            SDLK_c -> world { stage    = []                         }
             SDLK_m -> world { editmode = False                      }
             SDLK_h -> world { help     = not (help world)           }
+            SDLK_l -> world { pending  = [GetMap]                   }
             SDLK_w -> world { editmode = False, pending = [SaveMap] }
             _      -> world
         Quit -> world { running = False }
@@ -120,6 +134,8 @@ eventHandler event world = if editmode world
             SDLK_p      -> world { paused = not pause                                       }
             SDLK_k      -> world { speed  = speed world + 1                                 }
             SDLK_j      -> world { speed  = if speed world == 0 then 0 else speed world - 1 }
+            SDLK_l      -> world { pending  = [GetMap]                   }
+            SDLK_w      -> world { editmode = False, pending = [SaveMap] }
             _           -> world { snake  = updateSnake stg  d        s 0 pause             }
 
         -- if they quit, return the world in order to clean up and write the scores to a file
