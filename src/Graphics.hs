@@ -4,6 +4,7 @@ import Graphics.UI.SDL as SDL
 import Graphics.UI.SDL.TTF as TTF
 import Control.Monad (when, forM_)
 import Data.List (sort)
+import Data.Foldable (for_)
 import Types
 import Game
 
@@ -64,11 +65,9 @@ drawWorld surface font world = do
         fillRect surface (Just (Rect (x * bs ) (y * bs + yoffset) bs bs)) darkColour
     
     -- draw items
-    case item world of
-        Just (P x y)  -> do
+    for_ (item world) $ \(P x y) -> do
             fillRect surface (Just (Rect (x * bs + bs4 + 2) (y * bs + bs4 + 2 + yoffset) bs2 bs2)) shadowColour
             fillRect surface (Just (Rect (x * bs + bs4)     (y * bs + bs4 + yoffset)     bs2 bs2)) darkColour
-        Nothing -> return False
     
     -- draw snake
     forM_ (points (snake world)) $ \(P x y) -> 
