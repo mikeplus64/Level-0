@@ -14,6 +14,7 @@ import Graphics.UI.SDL.Extra.Keys
 import Data.List (nub, delete)
 import Data.Maybe (fromMaybe)
 import Control.Monad (unless, void)
+import Control.Applicative ( (<$>) )
 import Data.Foldable (for_)
 import Data.Traversable (forM)
 
@@ -24,25 +25,24 @@ getFileName surface font world = getStringAndDo $ \s -> do
     unless (null s) $ void $ drawText surface font s (-h2 + 8) 30
     SDL.flip surface
 
-
 gameLoop :: Surface -> Font -> World -> IO World
 gameLoop surface font world = do
     event <- pollEvent
     case eventHandler event world of
         -- if we want to save the map ...
-        (World _ _ _ _ _ _ _ _ _ _ [SaveMap] _) -> do
+        World { pending = [SaveMap] } -> do
             maybePath <- getFileName surface font world
             for_ maybePath $ stageToFile (stage world)
             gameLoop  surface font (world { pending = [] })
 
         -- if we want to load a map ...
-        (World _ _ _ _ _ _ _ _ _ _ [GetMap] _) -> do
+        World { pending = [GetMap] } -> do
             maybePath <- getFileName surface font world
-            newStage  <- fmap (fromMaybe (stage world)) (forM maybePath fileToStage)
+            newStage  <- fromMaybe (stage world) <$> forM maybePath fileToStage
             gameLoop  surface font (world { pending = [], stage = newStage } )
 
         -- if the help menu is open ...
-        (World _ _ _ _ _ _ _ _ _ _ _ True) -> do
+        World { help = True } -> do
             fillRect  surface (Just (Rect 0 0 windowWidth (yoffset + 15))) shadowColour
             fillRect  surface (Just (Rect 0 0 windowWidth (yoffset + 13))) darkColour
             fillRect  surface (Just (Rect 0 0 windowWidth (yoffset + 12))) background
@@ -62,15 +62,15 @@ gameLoop surface font world = do
                     gameLoop  surface font world
 
         -- if we quit...
-        w@(World False _ _ _ _ _ _ _ _ _ _ _) -> return w
+        w@(World { running = False }) -> return w
 
         -- need to get more random numbers dude!
-        newWorld@(World _ _ _ _ _ _ _ _ Nothing _ _ _) -> do
-            start <- fmap (\(P x y) -> (P x y)) (randomXY newWorld)
+        newWorld@(World { item = Nothing }) -> do
+            start <- randomXY newWorld
             SDL.flip surface
             unless (editmode world) $ delay (speed world)
-            drawWorld surface font (newWorld { item = Just start })
-            gameLoop  surface font (newWorld { item = Just start })
+            drawWorld surface font $ newWorld { item = Just start }
+            gameLoop  surface font $ newWorld { item = Just start }
 
         newWorld ->
             if alive (snake newWorld) -- if the snake died...
@@ -119,6 +119,7 @@ eventHandler event world = if editmode world
             SDLK_l -> world { pending  = [GetMap]                   }
             SDLK_w -> world { editmode = False, pending = [SaveMap] }
             _      -> world
+
         Quit -> world { running = False }
         _    -> world
 
