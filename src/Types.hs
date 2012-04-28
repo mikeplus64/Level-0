@@ -11,7 +11,8 @@ type Item = Maybe Point
 -- North, South, East, West
 data Direction = N | S | E | W
 
-data GameEvent = SaveMap | GetMap
+data GameMode = Game | End | Save GameMode | Load GameMode | Editor | Scoreboard
+  deriving Eq
 
 data Snake = Snake
     { alive     :: Bool
@@ -20,16 +21,12 @@ data Snake = Snake
     }
 
 data World = World 
-    { running   :: Bool
-    , snake     :: Snake
+    { snake     :: Snake
     , stage     :: Stage
-    , paused    :: Bool
     , speed     :: Word32
     , score     :: Int
     , scores    :: [Int]
     , fscores   :: [Int]
     , item      :: Item
-    , editmode  :: Bool
-    , pending   :: [GameEvent]
-    , help      :: Bool
+    , mode      :: (Bool, GameMode) -- whether the help menu is open and the current game mode
     }

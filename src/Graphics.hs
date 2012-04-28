@@ -86,5 +86,5 @@ drawWorld surface font world = do
     fillRect surface (Just (Rect 0 yoffset windowWidth 1)) darkColour
     
     -- if the world is paused, draw the score board
-    when (paused world) $ drawScores surface font world
+    when (snd (mode world) == Scoreboard) $ drawScores surface font world
 
