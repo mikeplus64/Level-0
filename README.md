@@ -13,6 +13,8 @@
 * a font (by default tries to get /usr/share/fonts/TTF/TerminusBold.ttf)
 
 ## Installation / usage
+Level 0 is now on Hackage, so you can install it with `cabal install Level0`.
+
 `$ make`
 
 `$ bin/level_0 [ms between frames [path to map file]]`
