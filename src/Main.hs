@@ -12,8 +12,8 @@ import Stage
 
 import Graphics.UI.SDL     as SDL
 import Graphics.UI.SDL.TTF as TTF
-import Control.Monad (when, forM_)
-import System.Directory (getAppUserDataDirectory, createDirectoryIfMissing)
+import Control.Monad (when, forM_, unless)
+import System.Directory (getAppUserDataDirectory, createDirectoryIfMissing, doesFileExist)
 import System.Environment (getArgs)
 
 main :: IO ()
@@ -23,6 +23,18 @@ main = do
     -- make sure the conf directory exists...
     dataDir <- getAppUserDataDirectory "config/level_0"
     createDirectoryIfMissing True dataDir
+
+    -- create files if missing
+    mapExists    <- doesFileExist $ dataDir ++ "/map"
+    unless mapExists $ do
+        putStrLn $ "Creating " ++ dataDir ++ "/map" 
+        writeFile (dataDir ++ "/map") ""
+
+    scoreExists <- doesFileExist $ dataDir ++ "/scores"
+    unless scoreExists $ do
+        putStrLn $ "Creating " ++ dataDir ++ "/score"
+        writeFile (dataDir ++ "/score") ""
+    
 
     (speed', stage'') <- case args of
         ["none", speed'']   -> return (read speed'', return [])
@@ -36,8 +48,30 @@ main = do
     -- start your engines
     SDL.init [InitEverything]
     TTF.init
+    
+    let defaultFont = (dataDir ++ "/font.ttf", "/usr/share/fonts/TTF/TerminusBold.ttf")
 
-    font <- openFont (dataDir ++ "/font.ttf") 18
+    defaultFontExist <- doesFileExist $ fst defaultFont
+    unless defaultFontExist $ putStrLn "No default font found. Trying /usr/share/fonts/TTF/TerminusBold.ttf."
+
+    terminusFontExist <- doesFileExist $ snd defaultFont
+    unless (defaultFontExist || terminusFontExist) $ putStrLn "/usr/share/fonts/TTF/TerminusBold.ttf doesn't exist. Please enter the path of a font: "
+    
+    fontPath <- case (defaultFontExist, terminusFontExist) of
+                (True, _) -> return $ fst defaultFont
+                (_, True) -> return $ snd defaultFont
+                _ -> 
+                    let loop = do
+                        fpath <- getLine
+                        exists <- doesFileExist fpath
+                        if exists
+                            then return fpath
+                            else do
+                                putStrLn "Font does not exist. Try again."
+                                loop
+                    in loop
+
+    font <- openFont fontPath 18
 
     setCaption "Level 0" ""
     setVideoMode windowWidth windowHeight 24 [HWSurface, DoubleBuf]
