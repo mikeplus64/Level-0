@@ -25,12 +25,12 @@ main = do
     createDirectoryIfMissing True dataDir
 
     -- create files if missing
-    mapExists    <- doesFileExist $ dataDir ++ "/map"
+    mapExists <- doesFileExist $ dataDir ++ "/map"
     unless mapExists $ do
         putStrLn $ "Creating " ++ dataDir ++ "/map" 
         writeFile (dataDir ++ "/map") ""
 
-    scoreExists <- doesFileExist $ dataDir ++ "/scores"
+    scoreExists <- doesFileExist $ dataDir ++ "/score"
     unless scoreExists $ do
         putStrLn $ "Creating " ++ dataDir ++ "/score"
         writeFile (dataDir ++ "/score") ""

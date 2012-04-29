@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                Level0
-version:             1.0
+version:             1.1
 synopsis:            A Snake II clone written using SDL.
 -- description:         
 homepage:            http://quasimal.com/projects/level_0.html
@@ -16,9 +16,9 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 executable Level0
-  ghc-options: -O2 -threaded
+  ghc-options:         -O2 -threaded
   hs-source-dirs:      src/
   main-is:             Main.hs
-  -- other-modules:       
+  other-modules:       Types, World, Logic, Graphics, Game, Stage, Utils, Graphics.UI.SDL.Extra.Keys
   build-depends:       base ==4.5.*, SDL ==0.6.*, SDL-ttf ==0.6.*, random ==1.0.*, directory ==1.1.*
   hs-source-dirs:      src
