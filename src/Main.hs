@@ -1,5 +1,3 @@
--- Copyright 2012 Mike Ledger
--- License: GNU GPL v3. See COPYING.
 module Main where
 
 import Logic
